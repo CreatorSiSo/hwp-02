@@ -9,5 +9,5 @@ We were allowed to use the Arduino program located in `src/DMX/DmxSimple.h`.
 ## Project Structure
 
 - `src/main.rs` cli for starting the DMX sequence (via USB) and music at the same time.
-- `src/DMX` on Arduino Nano, used for controlling the lights.
-- `src/serial` on ESP32-S3, used for testing the serial connection and remote control.
+- `src/DMX` for Arduino Nano, used for controlling the lights.
+- `src/serial` for ESP32-S3 and Arduino Nano, used for testing the serial connection and remote control.

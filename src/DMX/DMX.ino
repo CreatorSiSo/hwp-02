@@ -8,16 +8,6 @@ struct Color {
 
   Color(uint8_t r, uint8_t g, uint8_t b, uint8_t w) 
     : r(r), g(g), b(b), w(w) {}
-
-  static Color lerp(Color a, Color b, double t) {
-    uint8_t t_int = static_cast<uint8_t>(t * 256.0);
-    return Color(
-      map(t_int, 0, 255, a.r, b.r),
-      map(t_int, 0, 255, a.g, b.g),
-      map(t_int, 0, 255, a.b, b.b),
-      map(t_int, 0, 255, a.w, b.w)
-    );
-  }
 };
 
 struct Direction {
@@ -36,17 +26,6 @@ struct SimpleLight {
   void set_dimming(uint8_t value) {
     write(1, value);
   }
-
-  // void use_blending(bool value) {
-  //   if (value)
-  //     write(7, 200); // gradient
-  //   else
-  //     write(7, 150); // jump
-  // }
-
-  // void set_blend_speed(uint8_t speed) {
-  //   write(8, speed);
-  // }
 
   void set_color(Color color) {
     write(2, color.r);
@@ -67,14 +46,6 @@ struct MovingHead {
     write(14, 255);
   }
 
-  void light_on() {
-    write(6, 255);
-  }
-
-  void light_off() {
-    write(6, 0);
-  }
-
   void set_dimming(uint8_t value) {
     write(6, map(value, 0, 255, 8, 134));
   }
@@ -89,24 +60,20 @@ struct MovingHead {
   // Input: 0..540
   // Writes: 0..255
   void pan(uint16_t deg) {
-    // 0.0 .. 1.0
-    double percantage = (double)deg / 540.0;
-    write(1, (uint8_t)(percantage * 255.0));
+    write(1, map(deg, 0, 540, 0, 255));
   }
 
 
   // Input: 0..180
   // Writes: 0..255
   void tilt(uint16_t deg) {
-    // 0.0 .. 1.0
-    double percantage = (double)deg / 180.0;
-    write(3, (uint8_t)(percantage * 255.0));
+    write(3, map(deg, 0, 180, 0, 255));
   }
 
-  // Input: 0..104
+  // Input: 0..255
   // Writes: 135..239
-  void strobe(uint8_t speed) {
-    write(6, 135 + speed);
+  void set_strobe(uint8_t speed) {
+    write(6, map(speed, 0, 255, 135, 239));
   }
 
   void set_color(Color color) {
@@ -127,26 +94,26 @@ SimpleLight simple_1 = { .offset = 36 };
 MovingHead moving_0 = { .offset = 8 };
 MovingHead moving_1 = { .offset = 22 };
 
-// Putting startup code in setup and calling it multiple times
-// seems to not work on the arduino nano
 void setup() {
   DmxSimple.usePin(3);
   DmxSimple.maxChannel(44);
 }
 
-void start() {
+void reset() {
   moving_0.reset();
   moving_1.reset();
   moving_0.set_speed(0);
   moving_1.set_speed(0);
-  moving_0.light_off();
-  moving_1.light_off();
 
+  moving_0.set_dimming(0);
+  moving_1.set_dimming(0);
   simple_0.set_dimming(0);
   simple_1.set_dimming(0);
+}
 
+void wait_for_start() {
   Serial.begin(115200, SERIAL_8N1);
-  // wait for serial port to connect. Needed for native USB
+  // Wait for serial port to connect
   while (!Serial);
 
   while (true) {
@@ -160,7 +127,8 @@ void start() {
 }
 
 void loop() {
-  start();
+  reset();
+  wait_for_start();
   sequence();
   Serial.print("End\n");
   Serial.flush();

@@ -2,7 +2,7 @@
 // seems to not work on the arduino nano
 void setup() {}
 
-void start() {
+void wait_for_start() {
   Serial.begin(115200, SERIAL_8N1);
   // wait for serial port to connect. Needed for native USB
   while (!Serial);
@@ -18,7 +18,7 @@ void start() {
 }
 
 void loop() {
-  start();
+  wait_for_start();
   delay(30000);
   Serial.print("End\n");
   Serial.flush();
